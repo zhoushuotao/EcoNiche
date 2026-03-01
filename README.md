@@ -1,13 +1,156 @@
-````markdown
 # EcoNiche
 
-**EcoNiche** is an R package for estimating **niche position** and **niche width** for taxa (OTUs/ASVs/species), and for summarizing these traits at the **sample** or **group** level.
+**EcoNiche** is an R package for quantifying niche position and niche breadth under continuous, multidimensional environmental gradients.
 
-It implements three complementary workflows:
+Traditional niche breadth indices often treat sampling units as discrete states. However, real ecological gradients are continuous, multidimensional, and frequently confounded by covariates (e.g., climate, spatial structure, background environmental effects). EcoNiche provides a standardized workflow to estimate niche parameters within a constrained ordination framework while explicitly controlling for covariates.
 
-1. **CCA / partial-CCA** (multi-dimensional environmental niche; supports covariate control)
-2. **GAM along a single environmental gradient** (taxon response curves; optimum + breadth)
-3. **Levins niche breadth** (samples-as-states or gradient-binned states)
+The package is built around one central idea:
+
+> Estimate niche position and conditional niche breadth in a continuous environmental space, rather than across arbitrary discrete states.
+
+To achieve this, EcoNiche implements three analytical modules with distinct roles:
+
+---
+
+## 1️⃣ CCA / partial-CCA (core framework)
+
+**This is the primary method of EcoNiche.**
+
+This workflow is based on canonical correspondence analysis (CCA) and partial CCA (pCCA) following Okie et al. (2015) and Feng et al. (2020).
+
+It allows users to:
+
+- Construct a **composite environmental gradient** from multiple predictors
+- Quantify **niche position** as the abundance-weighted mean along the dominant constrained axis
+- Quantify **conditional niche breadth** as abundance-weighted dispersion after covariate control
+
+Conceptually:
+
+- CCA defines the dominant environmental gradient associated with focal predictors.
+- pCCA removes covariate structure (e.g., temperature, spatial effects) to reduce confounding.
+- Species’ spread in this covariate-controlled space represents conditional niche breadth.
+
+This framework is specifically designed for:
+
+- Continuous gradients
+- Multivariate environmental predictors
+- Explicit covariate control
+- Community-scale comparisons
+
+---
+
+## 2️⃣ GAM (nonlinear single-gradient modeling and species response curves)
+
+The GAM module serves both as a validation tool and as a biologically interpretable response modeling framework.
+
+It fits species-specific response curves along the composite environmental axis (typically CCA1), allowing:
+
+- Estimation of gradient optima
+- Extraction of response breadth (Breadth50)
+- Assessment of nonlinear response structure
+- Explicit visualization of species-specific response curves
+
+This module serves three complementary purposes:
+
+1. **Cross-validation of ordination-based niche position**  
+   GAM-derived optima can be compared directly with CCA-based abundance-weighted means to evaluate positional consistency.
+
+2. **Quantification of one-dimensional tolerance along the dominant composite gradient**  
+   Breadth50 provides a practical measure of effective response range along the main constrained axis.
+
+3. **Visualization of individual species response curves**  
+   GAM explicitly models the abundance–environment relationship, allowing users to:
+   - Identify unimodal vs. skewed response shapes
+   - Detect boundary-constrained optima
+   - Compare narrow vs. broad response profiles across taxa
+   - Interpret ecological strategies at the single-species level
+
+Importantly, the GAM analysis is conducted within the same gradient coordinate system defined by CCA, ensuring conceptual consistency between ordination-based and response-curve-based niche estimation.
+
+---
+
+## 3️⃣ Levins’ niche breadth (discrete-state benchmark)
+
+Levins’ index is implemented for comparison, not as the primary estimator.
+
+EcoNiche provides two Levins implementations:
+
+- Sample-defined states (classical formulation)
+- Gradient-binned states (bins along the composite CCA axis)
+
+These serve as sensitivity benchmarks to evaluate:
+
+- Dependence on state definition
+- Sensitivity to sampling structure
+- Confounding with species commonness (occurrence frequency and total abundance)
+
+In continuous-gradient contexts, Levins’ breadth may reflect occupancy or prevalence more than environmental tolerance. Therefore, it is included primarily for methodological comparison.
+
+---
+
+## Conceptual structure of EcoNiche
+
+<img width="4159" height="2870" alt="github计算框架" src="https://github.com/user-attachments/assets/4fa71bb4-9b56-4918-8df5-d352e5082100" />
+
+* Analytical structure of EcoNiche. CCA/pCCA define a composite environmental gradient for estimating niche position and conditional niche breadth. GAM provides species response curves along the same axis, and Levins’ index serves as a discrete-state comparison.*
+
+---
+
+EcoNiche is designed as a modular analytical framework rather than a fixed analytical pipeline.
+
+At its core, the framework is built on constrained ordination:
+
+**CCA / partial-CCA define the composite environmental gradient and estimate niche parameters in continuous multivariate space.**
+
+From this core framework, users may choose different complementary modules depending on their research question:
+
+---
+
+### Core module: CCA / pCCA  
+Used to estimate:
+
+- Niche position (abundance-weighted mean along the constrained axis)
+- Conditional niche breadth (abundance-weighted dispersion after covariate control)
+
+This module is recommended when:
+- Environmental predictors are multidimensional
+- Covariate control is required
+- Continuous-gradient niche estimation is the primary objective
+
+---
+
+### Optional module A: GAM  
+Used when users wish to:
+
+- Visualize species-specific response curves
+- Quantify nonlinear response shapes
+- Extract one-dimensional optima and response breadth (Breadth50)
+- Cross-validate ordination-based niche position
+
+GAM operates along the composite gradient defined by CCA, ensuring consistency in coordinate space.
+
+---
+
+### Optional module B: Levins’ breadth  
+Used when users wish to:
+
+- Compute classical discrete-state niche breadth
+- Compare continuous-gradient estimation with sample-defined states
+- Evaluate sensitivity to binning or state definition
+- Assess potential commonness-driven effects
+
+Levins’ index is included primarily as a comparative benchmark rather than the primary estimator under continuous gradients.
+
+---
+
+In practice, users typically:
+
+1. Define focal environmental predictors and covariates.
+2. Estimate niche position and conditional niche breadth using CCA/pCCA.
+3. Optionally apply GAM for species-level response modeling.
+4. Optionally compute Levins’ breadth for methodological comparison.
+
+This flexible structure allows researchers to tailor analyses to their ecological question while maintaining a coherent gradient-based coordinate system.
 
 > Package version: **0.9.0**
 
@@ -132,6 +275,77 @@ res$species$plot
 # Site niche position vs a gradient variable
 res$gradient$plot
 ```
+
+### Choosing `sel` and `covariates` in CCA/pCCA
+
+EcoNiche separates environmental predictors into:
+
+- `sel` — focal environmental variable(s) defining the primary constrained axis
+- `covariates` — conditioning variables used to control background structure
+
+The appropriate choice depends on study design and ecological hypothesis.
+
+---
+
+#### Scenario 1: Sampling along a known focal gradient (hypothesis-driven design)
+
+If samples were collected explicitly along a known environmental gradient (e.g., temperature, pH, elevation), that gradient should typically be treated as the focal predictor.
+
+Example:
+
+- Samples span a temperature gradient across latitude.
+- Other variables (e.g., pH, NDVI) vary but are not the primary research focus.
+
+Recommended setup:
+
+```r
+sel = "Temperature"
+covariates = c("pH", "NDVI")
+```
+
+Interpretation:
+
+- CCA constructs the dominant composite axis associated with the focal gradient.
+
+- pCCA controls for background covariates.
+
+- Niche position reflects species location along the focal gradient.
+
+- Conditional niche breadth reflects dispersion after removing background effects.
+
+This setup is appropriate when the research question is:
+
+> How do species’ niches vary along temperature after accounting for other environmental structure?
+
+#### Scenario 2: No predefined focal gradient (exploratory design) 
+
+If the dominant environmental structure is unclear, or multiple predictors are strongly correlated, a data-driven approach is recommended.
+
+In this case:
+
+1. Perform PCA on environmental variables.
+
+2. Inspect loadings of PC1 and PC2.
+
+3. Identify the dominant composite environmental structure.
+
+4. Use this information to guide CCA/pCCA specification.
+
+Example:
+
+- PC1 loads strongly on precipitation and moisture.
+
+- PC2 reflects soil chemistry.
+
+You may then:
+
+- Use predictors associated with PC1 as sel
+
+- Use remaining structure as covariates
+
+- Or reduce dimensionality first via cca_prep_env()
+
+This approach avoids arbitrarily selecting a single variable when gradients are inherently multivariate.
 
 ### A2) Group workflow
 
