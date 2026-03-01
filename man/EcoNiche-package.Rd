@@ -13,8 +13,8 @@ CoNiche provides tools to estimate niche position and niche width using
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/zhoushuotao/EcoNiche}
-  \item Report bugs at \url{https://github.com/zhoushuotao/EcoNiche/issues}
+  \item \url{https://github.com/yedeng-lab/EcoNiche}
+  \item Report bugs at \url{https://github.com/yedeng-lab/EcoNiche/issues}
 }
 
 }
