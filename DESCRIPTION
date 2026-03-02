@@ -1,7 +1,7 @@
 Package: EcoNiche
 Type: Package
 Title: Community Niche Position and Width Estimation Tools
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: c(
     person("Shuotao", "Zhou", , "zhoushuotao@stu.hunau.edu.cn", role = c("aut", "cre")),
     person("Kai", "Feng", , "kaifeng@rcees.ac.cn", role = "aut"),
