@@ -13,10 +13,25 @@
 #'   See \code{\link{cca_workflow_gradient}} or \code{\link{cca_workflow_group}} for structure details.
 #' 
 #' @examples
-#' \dontrun{
-#' # Run the gradient workflow
-#' res <- cca_workflow(mode = "gradient", otu = my_otu, env = my_env, sel = "Temp")
-#' }
+#' set.seed(1)
+#' otu <- matrix(rpois(20*25, 5), nrow = 20)
+#' rownames(otu) <- paste0("OTU", 1:20)
+#' colnames(otu) <- paste0("S", 1:25)
+#' env <- data.frame(
+#'   Temp = rnorm(25, 15, 3),
+#'   pH   = rnorm(25, 6.5, 0.4),
+#'   SOC  = rlnorm(25, 2, 0.3)
+#' )
+#' rownames(env) <- colnames(otu)
+#' res <- cca_workflow(
+#'   mode = "gradient",
+#'   otu = otu, env = env,
+#'   sel = c("Temp", "pH"),
+#'   covariates = "SOC",
+#'   make_plot = FALSE,
+#'   top_node = 20
+#' )
+#' str(res, max.level = 1)
 #' @export
 cca_workflow <- function(mode = c("gradient", "group"), ...) {
   mode <- match.arg(mode)
